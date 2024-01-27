@@ -1,4 +1,3 @@
-import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.*;
@@ -6,9 +5,6 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 public class Program1
 {
-    // NUMTHREADS can be modified for use of more or less threads to compute primes
-    public static final int NUMTHREADS = 8;
-
     // simple way to gather a sum without using an atomic variable or counter
     public static long sum()
     {
@@ -42,7 +38,7 @@ public class Program1
     {
         FileWriter fw = new FileWriter("primes.txt");
         PrintWriter pw = new PrintWriter(fw);
-        pw.println("< "+time/1e9+" s> < "+sum()+" > < "+count()+" >");
+        pw.println("< "+time/1e9+"s > < "+sum()+" > < "+count()+" >");
         pw.print("< ");
         topTen().forEach(prime -> pw.print(prime + " "));
         pw.print(" >");
@@ -52,25 +48,27 @@ public class Program1
 
     public static void main (String args[]) throws Exception
     {
+            // NUMTHREADS can be modified for use of more or less threads to compute primes
+        final int NUMTHREADS = 8;
         Thread tArr[] = new Thread[NUMTHREADS];
         long start = System.nanoTime();
 
         for (int i = 0; i < NUMTHREADS; i++)
         {
-            Thread t = new Thread(new IsPrime());
+            IsPrime t = new IsPrime();
             tArr[i] = t;
             t.start();
         }
-        for (Thread t : tArr) 
+        for (int i = 0; i < NUMTHREADS; i++) 
         {
-            t.join();
+            tArr[i].join();
         }
 
         long time = System.nanoTime() - start;
         results(time);
     }
 }
-class IsPrime implements Runnable
+class IsPrime extends Thread
 {
     // TOPNUM is used for the top limit for the desired primes
     private static final long TOPNUM = (long) 1e8;
@@ -103,7 +101,7 @@ class IsPrime implements Runnable
         // method learned in PL with Leinecker to find primes more efficiently
         // even numbers are never prime after 2 and any number larger than the square root will
         // not divide evenly into n if the other multiple wasn't already found
-        long sqrt = (long)(Math.sqrt(n));
+        double sqrt = Math.sqrt(n);
         for (long i = 3; i < sqrt + 1; i+=2)
         {
             if(n % i == 0)
@@ -121,9 +119,8 @@ class IsPrime implements Runnable
         while (counter.get() < TOPNUM)
         {
             long j = counter.getAndIncrement();
-            isPrime(j);
-
-        }
+                            isPrime(j);
+                    }
     }
 }
 
@@ -134,8 +131,7 @@ class Counter
 
     public synchronized long getAndIncrement()
     {
-        long temp;
-        temp = value;
+        long temp = value;
         value = temp + 1;
         return temp;
     }
